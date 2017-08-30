@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 	"github.com/242617/fuss/sine"
 )
 
+const Application = "fuss-v1.0"
+
 const (
 	DefaultDeltaMin, DefaultDeltaMax         int = 7, 10
 	DefaultFrequencyMin, DefaultFrequencyMax int = 30, 50
@@ -19,15 +22,19 @@ const (
 )
 
 var (
+	err    error
+	fluid  bool
 	ss     *sine.StereoSine
 	stopCh chan struct{}
-	fluid  bool
-	err    error
 )
+
+var address = flag.String("address", ":8080", "service address")
 
 func main() {
 	log.SetFlags(log.Lshortfile)
-	log.Println("start")
+	log.Println("start", Application)
+
+	flag.Parse()
 
 	portaudio.Initialize()
 	defer portaudio.Terminate()
@@ -51,6 +58,7 @@ func main() {
 		}
 
 		ss.Stop()
+		w.Write([]byte(Application))
 	})
 	http.HandleFunc("/fluid", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -115,6 +123,7 @@ func main() {
 
 				}()
 			}
+			w.Write([]byte(Application))
 		}
 	})
 	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
@@ -148,8 +157,9 @@ func main() {
 				ss.Play()
 			}
 		}
+		w.Write([]byte(Application))
 	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(*address, nil))
 }
 
 func cycle(min, max int) chan int {

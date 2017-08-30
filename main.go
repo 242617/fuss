@@ -53,6 +53,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		w.Write([]byte("ok"))
+	})
 	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)

@@ -2,18 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gordonklaus/portaudio"
 
 	"github.com/242617/fuss/sine"
+	"github.com/242617/utils/parse"
 )
-
-const Application = "fuss-v1.0"
 
 const (
 	DefaultDeltaMin, DefaultDeltaMax         int = 7, 10
@@ -28,15 +27,21 @@ var (
 	stopCh chan struct{}
 )
 
+var config struct {
+	Address string `json:"address"`
+}
+
+var configPath = flag.String("config", "./fuss.config.json", "config path")
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 
-	if len(os.Args) != 2 {
-		log.Fatal("incorrect arguments number")
+	if err := parse.ParseConfig(*configPath, &config); err != nil {
+		log.Fatal(err)
 	}
-	address := os.Args[1]
 
-	log.Println("start", Application)
+	log.Println("start fuss")
+	flag.Parse()
 
 	portaudio.Initialize()
 	defer portaudio.Terminate()
@@ -60,7 +65,6 @@ func main() {
 		}
 
 		ss.Stop()
-		w.Write([]byte(Application))
 	})
 	http.HandleFunc("/fluid", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -125,7 +129,6 @@ func main() {
 
 				}()
 			}
-			w.Write([]byte(Application))
 		}
 	})
 	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
@@ -159,9 +162,8 @@ func main() {
 				ss.Play()
 			}
 		}
-		w.Write([]byte(Application))
 	})
-	log.Fatal(http.ListenAndServe(address, nil))
+	log.Fatal(http.ListenAndServe(config.Address, nil))
 }
 
 func cycle(min, max int) chan int {

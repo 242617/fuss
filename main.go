@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gordonklaus/portaudio"
@@ -28,13 +28,15 @@ var (
 	stopCh chan struct{}
 )
 
-var address = flag.String("address", ":8080", "service address")
-
 func main() {
 	log.SetFlags(log.Lshortfile)
-	log.Println("start", Application)
 
-	flag.Parse()
+	if len(os.Args) != 2 {
+		log.Fatal("incorrect arguments number")
+	}
+	address := os.Args[1]
+
+	log.Println("start", Application)
 
 	portaudio.Initialize()
 	defer portaudio.Terminate()
@@ -159,7 +161,7 @@ func main() {
 		}
 		w.Write([]byte(Application))
 	})
-	log.Fatal(http.ListenAndServe(*address, nil))
+	log.Fatal(http.ListenAndServe(address, nil))
 }
 
 func cycle(min, max int) chan int {

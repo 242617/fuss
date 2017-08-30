@@ -29,6 +29,7 @@ var (
 
 var config struct {
 	Address string `json:"address"`
+	Static  string `json:"static"`
 }
 
 var configPath = flag.String("config", "./fuss.config.json", "config path")
@@ -53,8 +54,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Method, "/")
+	http.HandleFunc("/check", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, "/check")
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -175,6 +176,7 @@ func main() {
 			}
 		}
 	})
+	http.Handle("/", http.FileServer(http.Dir(config.Static)))
 	log.Fatal(http.ListenAndServe(config.Address, nil))
 }
 

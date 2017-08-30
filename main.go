@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gordonklaus/portaudio"
@@ -10,46 +13,159 @@ import (
 )
 
 const (
-	delta      int           = 7
-	min, max   int           = 30, 70
-	sampleRate int           = 44100
-	speed      time.Duration = 80
+	DefaultDeltaMin, DefaultDeltaMax         int = 7, 10
+	DefaultFrequencyMin, DefaultFrequencyMax int = 30, 50
+	DefaultDelay                             int = 250
 )
 
 var (
-	s   *sine.StereoSine
-	err error
+	ss     *sine.StereoSine
+	stopCh chan struct{}
+	fluid  bool
+	err    error
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+	log.Println("start")
+
 	portaudio.Initialize()
 	defer portaudio.Terminate()
 
-	if s, err = sine.NewStereoSine(min, min, sampleRate); err != nil {
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+
+	if ss, err = sine.NewStereoSine(DefaultFrequencyMin, DefaultFrequencyMin+DefaultDeltaMin, 44100); err != nil {
 		log.Fatal(err)
 	}
-	s.Play()
-	defer s.Stop()
 
-	for {
-		for d := 7; d < 20; d++ {
-			cycle(s, d)
+	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
-		for d := 20; d > 7; d-- {
-			cycle(s, d)
+
+		if fluid {
+			stopCh <- struct{}{}
+			fluid = false
 		}
-	}
+
+		ss.Stop()
+	})
+	http.HandleFunc("/fluid", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if fluid {
+			stopCh <- struct{}{}
+		}
+		fluid = true
+
+		defer r.Body.Close()
+		if barr, err := ioutil.ReadAll(r.Body); err != nil {
+			log.Println(err)
+		} else {
+			var settings struct {
+				Delta struct {
+					Min *int `json:"min"`
+					Max *int `json:"max"`
+				} `json:"delta"`
+				Frequency struct {
+					Min *int `json:"min"`
+					Max *int `json:"max"`
+				} `json:"frequency"`
+				Delay *int `json:"delay"`
+			}
+			if err := json.Unmarshal(barr, &settings); err != nil {
+				log.Println(err)
+			} else {
+
+				ss.Play()
+				go func() {
+					if settings.Delta.Min == nil {
+						*settings.Delta.Min = DefaultDeltaMin
+					}
+					if settings.Delta.Max == nil {
+						*settings.Delta.Max = DefaultDeltaMax
+					}
+					if settings.Frequency.Min == nil {
+						*settings.Frequency.Min = DefaultFrequencyMin
+					}
+					if settings.Frequency.Max == nil {
+						*settings.Frequency.Max = DefaultFrequencyMax
+					}
+					if settings.Delay == nil {
+						*settings.Delay = DefaultDelay
+					}
+
+					for l := range cycle(*settings.Frequency.Min, *settings.Frequency.Max) {
+						for d := range cycle(*settings.Delta.Min, *settings.Delta.Max) {
+							select {
+							case <-stopCh:
+								return
+							default:
+								ss.SetLeft(l)
+								ss.SetRight(l + d)
+								time.Sleep(time.Duration(*settings.Delay) * time.Millisecond)
+							}
+						}
+					}
+
+				}()
+			}
+		}
+	})
+	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if fluid {
+			stopCh <- struct{}{}
+			fluid = false
+		}
+
+		defer r.Body.Close()
+		if barr, err := ioutil.ReadAll(r.Body); err != nil {
+			log.Println(err)
+		} else {
+			var settings struct {
+				Left  *int `json:"left"`
+				Right *int `json:"right"`
+			}
+			if err := json.Unmarshal(barr, &settings); err != nil {
+				log.Println(err)
+			} else {
+				if settings.Left != nil {
+					ss.SetLeft(*settings.Left)
+				}
+				if settings.Right != nil {
+					ss.SetRight(*settings.Right)
+				}
+				ss.Play()
+			}
+		}
+	})
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func cycle(s *sine.StereoSine, d int) {
-	for i := min; i < max; i++ {
-		time.Sleep(speed * time.Millisecond)
-		s.SetLeft(i)
-		s.SetRight(i + d)
+func cycle(min, max int) chan int {
+	if min > max {
+		min, max = max, min
 	}
-	for i := max; i > min; i-- {
-		time.Sleep(speed * time.Millisecond)
-		s.SetLeft(i)
-		s.SetRight(i + d)
-	}
+	ch := make(chan int)
+	go func() {
+		for {
+			for i := min; i < max; i++ {
+				ch <- i
+			}
+			for i := max; i > min; i-- {
+				ch <- i
+			}
+		}
+	}()
+	return ch
 }

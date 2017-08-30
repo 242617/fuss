@@ -54,6 +54,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, "/")
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -62,6 +63,7 @@ func main() {
 		w.Write([]byte("ok"))
 	})
 	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, "/stop")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -75,6 +77,7 @@ func main() {
 		ss.Stop()
 	})
 	http.HandleFunc("/fluid", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, "/fluid")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -140,6 +143,7 @@ func main() {
 		}
 	})
 	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, "/manual")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
 			return

@@ -126,8 +126,8 @@ func main() {
 						*settings.Delay = DefaultDelay
 					}
 
-					for l := range cycle(*settings.Frequency.Min, *settings.Frequency.Max) {
-						for d := range cycle(*settings.Delta.Min, *settings.Delta.Max) {
+					for l := range cycleChan(*settings.Frequency.Min, *settings.Frequency.Max) {
+						for d := range cycleChan(*settings.Delta.Min, *settings.Delta.Max) {
 							select {
 							case <-stopCh:
 								return
@@ -180,7 +180,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(config.Address, nil))
 }
 
-func cycle(min, max int) chan int {
+func cycleChan(min, max int) chan int {
 	if min > max {
 		min, max = max, min
 	}

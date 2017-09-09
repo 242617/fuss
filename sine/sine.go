@@ -20,10 +20,10 @@ func NewStereoSine(left, right int, sampleRate int) (s *StereoSine, err error) {
 }
 
 type StereoSine struct {
-	sampleRate        float64
-	left, leftPhase   float64
-	right, rightPhase float64
-	stream            *portaudio.Stream
+	sampleRate                     float64
+	left, leftPhase, leftVolume    float64
+	right, rightPhase, rightVolume float64
+	stream                         *portaudio.Stream
 }
 
 func (s *StereoSine) SetLeft(left int) {
@@ -44,9 +44,32 @@ func (s *StereoSine) Stop() error {
 
 func (s *StereoSine) process(out [][]float32) {
 	for i := range out[0] {
-		out[0][i] = float32(math.Sin(2 * math.Pi * s.leftPhase))
+		out[0][i] = float32(math.Sin(2*math.Pi*s.leftPhase)) * float32(s.leftVolume) / 100
 		_, s.leftPhase = math.Modf(s.leftPhase + s.left)
-		out[1][i] = float32(math.Sin(2 * math.Pi * s.rightPhase))
+		out[1][i] = float32(math.Sin(2*math.Pi*s.rightPhase)) * float32(s.rightVolume) / 100
 		_, s.rightPhase = math.Modf(s.rightPhase + s.right)
+	}
+}
+
+func cycle(min, max int) func() int {
+	if min > max {
+		min, max = max, min
+	}
+	cur := min
+	inc := true
+
+	return func() int {
+		if inc {
+			cur += 1
+			if cur == max {
+				inc = false
+			}
+		} else {
+			cur -= 1
+			if cur == min {
+				inc = true
+			}
+		}
+		return cur
 	}
 }

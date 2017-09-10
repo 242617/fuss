@@ -20,10 +20,11 @@ func NewStereoSine(left, right int, sampleRate int) (s *StereoSine, err error) {
 }
 
 type StereoSine struct {
-	sampleRate                     float64
-	left, leftPhase, leftVolume    float64
-	right, rightPhase, rightVolume float64
-	stream                         *portaudio.Stream
+	sampleRate              float64
+	left, leftPhase         float64
+	right, rightPhase       float64
+	leftVolume, rightVolume int
+	stream                  *portaudio.Stream
 }
 
 func (s *StereoSine) SetLeft(left int) {
@@ -32,6 +33,10 @@ func (s *StereoSine) SetLeft(left int) {
 
 func (s *StereoSine) SetRight(right int) {
 	s.right = float64(right) / s.sampleRate
+}
+
+func (s *StereoSine) SetVolume(volume int) {
+	s.leftVolume, s.rightVolume = volume, volume
 }
 
 func (s *StereoSine) Play() error {

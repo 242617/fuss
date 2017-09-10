@@ -3,15 +3,16 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/242617/utils/parse"
 	"github.com/gordonklaus/portaudio"
 
-	"github.com/242617/fuss/sine"
-	"github.com/242617/utils/parse"
+	"github.com/242617/torture/sine"
 )
 
 const (
@@ -32,7 +33,7 @@ var config struct {
 	Static  string `json:"static"`
 }
 
-var configPath = flag.String("config", "./fuss.config.json", "config path")
+var configPath = flag.String("config", "./torture.config.json", "config path")
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -41,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("start fuss")
+	fmt.Println("start torture")
 	flag.Parse()
 
 	portaudio.Initialize()
@@ -160,8 +161,9 @@ func main() {
 			log.Println(err)
 		} else {
 			var settings struct {
-				Left  *int `json:"left"`
-				Right *int `json:"right"`
+				Left   *int `json:"left"`
+				Right  *int `json:"right"`
+				Volume *int `json:"volume"`
 			}
 			if err := json.Unmarshal(barr, &settings); err != nil {
 				log.Println(err)
@@ -171,6 +173,9 @@ func main() {
 				}
 				if settings.Right != nil {
 					ss.SetRight(*settings.Right)
+				}
+				if settings.Volume != nil {
+					ss.SetVolume(*settings.Volume)
 				}
 				ss.Play()
 			}

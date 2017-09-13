@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/242617/utils/parse"
 	"github.com/gordonklaus/portaudio"
 
 	"github.com/242617/torture/sine"
+	"github.com/242617/utils/parse"
 )
 
 const (
@@ -22,10 +22,10 @@ const (
 )
 
 var (
-	err    error
-	fluid  bool
-	ss     *sine.StereoSine
-	stopCh chan struct{}
+	err          error
+	fluidEnabled bool
+	ss           *sine.StereoSine
+	stopCh       chan struct{}
 )
 
 var config struct {
@@ -55,150 +55,118 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/check", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Method, "/check")
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		w.Write([]byte("ok"))
-	})
-	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Method, "/stop")
+	http.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Method, "/start")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if fluid {
+		if fluidEnabled {
 			stopCh <- struct{}{}
-			fluid = false
+			fluidEnabled = false
+		}
+
+		ss.Play()
+	})
+	http.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Method, "/stop")
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if fluidEnabled {
+			stopCh <- struct{}{}
+			fluidEnabled = false
 		}
 
 		ss.Stop()
 	})
-	http.HandleFunc("/fluid", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Method, "/fluid")
+	http.HandleFunc("/volume", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Method, "/volume")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if fluid {
-			stopCh <- struct{}{}
+		var settings struct {
+			Left  *int `json:"left"`
+			Right *int `json:"right"`
 		}
-		fluid = true
-
-		defer r.Body.Close()
-		if barr, err := ioutil.ReadAll(r.Body); err != nil {
-			log.Println(err)
-		} else {
-			var settings struct {
-				Delta struct {
-					Min *int `json:"min"`
-					Max *int `json:"max"`
-				} `json:"delta"`
-				Frequency struct {
-					Min *int `json:"min"`
-					Max *int `json:"max"`
-				} `json:"frequency"`
-				Delay *int `json:"delay"`
-			}
-			if err := json.Unmarshal(barr, &settings); err != nil {
-				log.Println(err)
-			} else {
-
-				ss.Play()
-				go func() {
-					if settings.Delta.Min == nil {
-						*settings.Delta.Min = DefaultDeltaMin
-					}
-					if settings.Delta.Max == nil {
-						*settings.Delta.Max = DefaultDeltaMax
-					}
-					if settings.Frequency.Min == nil {
-						*settings.Frequency.Min = DefaultFrequencyMin
-					}
-					if settings.Frequency.Max == nil {
-						*settings.Frequency.Max = DefaultFrequencyMax
-					}
-					if settings.Delay == nil {
-						*settings.Delay = DefaultDelay
-					}
-
-					for l := range cycleChan(*settings.Frequency.Min, *settings.Frequency.Max) {
-						for d := range cycleChan(*settings.Delta.Min, *settings.Delta.Max) {
-							select {
-							case <-stopCh:
-								return
-							default:
-								ss.SetLeft(l)
-								ss.SetRight(l + d)
-								time.Sleep(time.Duration(*settings.Delay) * time.Millisecond)
-							}
-						}
-					}
-
-				}()
-			}
+		parseBody(w, r, &settings)
+		if settings.Left != nil {
+			ss.Left.SetVolume(*settings.Left)
+		}
+		if settings.Right != nil {
+			ss.Right.SetVolume(*settings.Right)
 		}
 	})
-	http.HandleFunc("/manual", func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Method, "/manual")
+	http.HandleFunc("/fluid", fluidHandler)
+	http.HandleFunc("/manual", manualHandler)
+	http.HandleFunc("/sms", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Method, "/sms")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if fluid {
+		if fluidEnabled {
 			stopCh <- struct{}{}
-			fluid = false
+		}
+		fluidEnabled = false
+
+		go func() {
+			ss.Play()
+			ss.Left.SetFrequency(80)
+			ss.Right.SetFrequency(90)
+			for i := 0; i < 3; i++ {
+				ss.SetVolume(100)
+				time.Sleep(200 * time.Millisecond)
+				ss.SetVolume(0)
+				time.Sleep(100 * time.Millisecond)
+			}
+			ss.Stop()
+		}()
+	})
+	http.HandleFunc("/call", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Method, "/call")
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
-		defer r.Body.Close()
-		if barr, err := ioutil.ReadAll(r.Body); err != nil {
-			log.Println(err)
-		} else {
-			var settings struct {
-				Left   *int `json:"left"`
-				Right  *int `json:"right"`
-				Volume *int `json:"volume"`
-			}
-			if err := json.Unmarshal(barr, &settings); err != nil {
-				log.Println(err)
-			} else {
-				if settings.Left != nil {
-					ss.SetLeft(*settings.Left)
-				}
-				if settings.Right != nil {
-					ss.SetRight(*settings.Right)
-				}
-				if settings.Volume != nil {
-					ss.SetVolume(*settings.Volume)
-				}
-				ss.Play()
-			}
+		if fluidEnabled {
+			stopCh <- struct{}{}
 		}
+		fluidEnabled = false
+
+		go func() {
+			ss.Play()
+			ss.Left.SetFrequency(80)
+			ss.Right.SetFrequency(90)
+			for i := 0; i < 7; i++ {
+				ss.SetVolume(100)
+				time.Sleep(800 * time.Millisecond)
+				ss.SetVolume(0)
+				time.Sleep(1200 * time.Millisecond)
+			}
+			ss.Stop()
+		}()
 	})
 	http.Handle("/", http.FileServer(http.Dir(config.Static)))
 	log.Fatal(http.ListenAndServe(config.Address, nil))
 }
 
-func cycleChan(min, max int) chan int {
-	if min > max {
-		min, max = max, min
-	}
-	ch := make(chan int)
-	go func() {
-		for {
-			for i := min; i < max; i++ {
-				ch <- i
-			}
-			for i := max; i > min; i-- {
-				ch <- i
-			}
+func parseBody(w http.ResponseWriter, r *http.Request, body interface{}) {
+	defer r.Body.Close()
+	if barr, err := ioutil.ReadAll(r.Body); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		if err := json.Unmarshal(barr, &body); err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
 		}
-	}()
-	return ch
+	}
 }

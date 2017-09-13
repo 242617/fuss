@@ -8,35 +8,25 @@ import (
 
 func NewStereoSine(left, right int, sampleRate int) (s *StereoSine, err error) {
 	s = &StereoSine{}
-	s.sampleRate = float64(sampleRate)
-
-	if s.stream, err = portaudio.OpenDefaultStream(0, 2, float64(s.sampleRate), 0, s.process); err != nil {
+	if s.stream, err = portaudio.OpenDefaultStream(0, 2, float64(sampleRate), 0, s.process); err != nil {
 		return
 	}
-	s.SetLeft(left)
-	s.SetRight(right)
+
+	s.Left.sampleRate = float64(sampleRate)
+	s.Left.SetFrequency(left)
+	s.Left.SetVolume(100)
+
+	s.Right.sampleRate = float64(sampleRate)
+	s.Right.SetFrequency(right)
+	s.Right.SetVolume(100)
 
 	return
 }
 
 type StereoSine struct {
-	sampleRate              float64
-	left, leftPhase         float64
-	right, rightPhase       float64
+	Left, Right             channel
 	leftVolume, rightVolume int
 	stream                  *portaudio.Stream
-}
-
-func (s *StereoSine) SetLeft(left int) {
-	s.left = float64(left) / s.sampleRate
-}
-
-func (s *StereoSine) SetRight(right int) {
-	s.right = float64(right) / s.sampleRate
-}
-
-func (s *StereoSine) SetVolume(volume int) {
-	s.leftVolume, s.rightVolume = volume, volume
 }
 
 func (s *StereoSine) Play() error {
@@ -47,34 +37,45 @@ func (s *StereoSine) Stop() error {
 	return s.stream.Stop()
 }
 
+func (s *StereoSine) SetFrequency(freq int) {
+	s.Left.SetFrequency(freq)
+	s.Right.SetFrequency(freq)
+}
+
+func (s *StereoSine) SetVolume(volume int) {
+	s.Left.SetVolume(volume)
+	s.Right.SetVolume(volume)
+}
+
 func (s *StereoSine) process(out [][]float32) {
 	for i := range out[0] {
-		out[0][i] = float32(math.Sin(2*math.Pi*s.leftPhase)) * float32(s.leftVolume) / 100
-		_, s.leftPhase = math.Modf(s.leftPhase + s.left)
-		out[1][i] = float32(math.Sin(2*math.Pi*s.rightPhase)) * float32(s.rightVolume) / 100
-		_, s.rightPhase = math.Modf(s.rightPhase + s.right)
+		out[0][i] = float32(s.Left.calc())
+		out[1][i] = float32(s.Right.calc())
 	}
 }
 
-func cycle(min, max int) func() int {
-	if min > max {
-		min, max = max, min
-	}
-	cur := min
-	inc := true
+type channel struct {
+	sampleRate  float64
+	freq, phase float64
+	volume      float64
+}
 
-	return func() int {
-		if inc {
-			cur += 1
-			if cur == max {
-				inc = false
-			}
-		} else {
-			cur -= 1
-			if cur == min {
-				inc = true
-			}
-		}
-		return cur
+func (c *channel) calc() (res float64) {
+	res = math.Sin(2*math.Pi*c.phase) * c.volume
+	_, c.phase = math.Modf(c.phase + c.freq)
+	return
+}
+
+func (c *channel) SetFrequency(freq int) {
+	c.freq = float64(freq) / c.sampleRate
+}
+
+func (c *channel) SetVolume(volume int) {
+	c.volume = float64(volume) / 100
+	if c.volume > 1 {
+		c.volume = 1
+	}
+	if c.volume < 0 {
+		c.volume = 0
 	}
 }

@@ -11,8 +11,9 @@ import (
 
 	"github.com/gordonklaus/portaudio"
 
+	"github.com/242617/torture/config"
+	"github.com/242617/torture/server"
 	"github.com/242617/torture/sine"
-	"github.com/242617/utils/parse"
 )
 
 const (
@@ -28,22 +29,19 @@ var (
 	stopCh       chan struct{}
 )
 
-var config struct {
-	Address string `json:"address"`
-	Static  string `json:"static"`
-}
-
-var configPath = flag.String("config", "./torture.config.json", "config path")
-
 func main() {
 	log.SetFlags(log.Lshortfile)
 
-	if err := parse.ParseConfig(*configPath, &config); err != nil {
+	flag.StringVar(&config.Path, "config", "torture.yaml", "Application config path")
+	flag.Parse()
+
+	if err = config.Init(); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("start torture")
-	flag.Parse()
+	log.Fatal(server.Init())
+
+	return
 
 	portaudio.Initialize()
 	defer portaudio.Terminate()
@@ -54,6 +52,15 @@ func main() {
 	if ss, err = sine.NewStereoSine(DefaultFrequencyMin, DefaultFrequencyMin+DefaultDeltaMin, 44100); err != nil {
 		log.Fatal(err)
 	}
+
+	ss.Play()
+	ss.Left.SetFrequency(80)
+	ss.Right.SetFrequency(90)
+	ss.SetVolume(100)
+
+	time.Sleep(10 * time.Second)
+
+	return
 
 	http.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.Method, "/start")
@@ -154,8 +161,8 @@ func main() {
 			ss.Stop()
 		}()
 	})
-	http.Handle("/", http.FileServer(http.Dir(config.Static)))
-	log.Fatal(http.ListenAndServe(config.Address, nil))
+	http.Handle("/", http.FileServer(http.Dir(config.Config.Static)))
+	log.Fatal(http.ListenAndServe(config.Config.ServerAddress, nil))
 }
 
 func parseBody(w http.ResponseWriter, r *http.Request, body interface{}) {

@@ -1,50 +1,52 @@
-$(function() {
-	console.log("loaded");
 
-			//Store frequently elements in variables
-			let slider  = $('#slider');
-			let tooltip = $('.tooltip');
 
-			//Hide the Tooltip at first
-			tooltip.hide();
+let address = () => document.getElementById("address").value;
 
-			//Call the Slider
-			slider.slider({
-				//Config
-				range: "min",
-				min: 1,
-				value: 35,
+$(() => {
 
-				start: function(event,ui) {
-					tooltip.fadeIn('fast');
-				},
+	let enabled = document.getElementById("enabled");
+	enabled.addEventListener("change", event => {
+		fetch(address(), { method: "PUT", body: JSON.stringify({ enabled: event.target.checked }) })
+		.then(console.log)
+		.catch(console.error);
+	});
+	new Switchery(enabled);
 
-				//Slider Event
-				slide: function(event, ui) { //When the slider is sliding
 
-					var value  = slider.slider('value'),
-					volume = $('.volume');
 
-					tooltip.css('left', value).text(ui.value);
+	let slider  = $("#slider");
 
-					if(value <= 5) { 
-						volume.css('background-position', '0 0');
-					} 
-					else if (value <= 25) {
-						volume.css('background-position', '0 -25px');
-					} 
-					else if (value <= 75) {
-						volume.css('background-position', '0 -50px');
-					} 
-					else {
-						volume.css('background-position', '0 -75px');
-					};
+	slider.slider({
+		animate: true,
+		range: "min",
+		min: 0,
+		value: 100,
+		step: 10,
 
-				},
+		slide: (event, ui) => {
 
-				stop: function(event,ui) {
-					tooltip.fadeOut('fast');
-				},
-			});
+			let value  = slider.slider('value'),
 
-		});
+			volume = $('.volume');
+			if (value <= 5) { 
+				volume.css('background-position', '0 0');
+			} else if (value <= 25) {
+				volume.css('background-position', '0 -25px');
+			} else if (value <= 75) {
+				volume.css('background-position', '0 -50px');
+			} else {
+				volume.css('background-position', '0 -75px');
+			};
+
+			fetch(address(), { method: "PUT", body: JSON.stringify({ volume: value }) })
+			.then(console.log)
+			.catch(console.error);
+
+		},
+		// start: (event, ui) => {},
+		// stop: (event, ui) => {},
+
+	});
+
+
+});

@@ -15,36 +15,27 @@
 <body>
 	<div class="container">
 		<h1>torture</h1>
-		<div class="well well-lg">
-			<input type="checkbox" class="js-switch" id="enabled" />
-			<section>	
-				<span class="tooltip"></span>
-				<div id="slider"></div>
-				<span class="volume"></span>
-			</section>
+
+		<div class="well well-sm">
+			<div class="row">
+				<div class="col-xs-3">
+					<input type="checkbox" class="js-switch" id="enabled" />
+				</div>
+				<div class="col-xs-9">
+					<section>
+						<div id="slider"></div>
+						<span class="volume"></span>
+					</section>
+				</div>
+			</div>
 		</div>
-		<div class="well well-lg">
-			<div>
-				<input type="text" id="address" value="http://localhost:8080/api">
+
+		<div class="well well-sm">
+			<div class="form-group">
+				<label for="address">Address:</label>
+				<input type="text" class="form-control" id="address" value="http://localhost:8080/api">
 			</div>
 		</div>
 	</div>
 </body>
-<script type="text/javascript">
-
-	let address = () => document.getElementById("address").value;
-
-	let enabled = document.getElementById("enabled");
-	new Switchery(enabled);
-	
-	enabled.addEventListener("change", event => {
-		fetch(address(), { method: "PUT", body: JSON.stringify({ enabled: event.target.checked }) })
-		.then(console.log)
-		.catch(console.error);
-	});
-
-	const manualPayload = '{"left":800,"right":900}';
-	const fluidPayload = '{"delta":{"min":4,"max":10},"frequency":{"min":30,"max":50},"delay":100}';
-
-</script>
 </html>

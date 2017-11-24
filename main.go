@@ -4,14 +4,10 @@ import (
 	"flag"
 	"log"
 
+	"github.com/gordonklaus/portaudio"
+
 	"github.com/242617/torture/config"
 	"github.com/242617/torture/server"
-)
-
-const (
-	DefaultDeltaMin, DefaultDeltaMax         int = 7, 10
-	DefaultFrequencyMin, DefaultFrequencyMax int = 30, 50
-	DefaultDelay                             int = 250
 )
 
 var err error
@@ -32,8 +28,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// portaudio.Initialize()
-	// defer portaudio.Terminate()
+	portaudio.Initialize()
+	defer portaudio.Terminate()
 
 	log.Println("starting")
 	log.Fatal(server.Init())

@@ -1,6 +1,12 @@
 package sine
 
-/*func NewStereoSine(left, right int, sampleRate int) (s *StereoSine, err error) {
+import (
+	"math"
+
+	"github.com/gordonklaus/portaudio"
+)
+
+func NewStereoSine(left, right int, sampleRate int) (s *StereoSine, err error) {
 	s = &StereoSine{}
 	if s.stream, err = portaudio.OpenDefaultStream(0, 2, float64(sampleRate), 0, s.process); err != nil {
 		return
@@ -72,4 +78,4 @@ func (c *channel) SetVolume(volume int) {
 	if c.volume < 0 {
 		c.volume = 0
 	}
-}*/
+}

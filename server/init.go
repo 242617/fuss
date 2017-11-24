@@ -8,23 +8,30 @@ import (
 	"time"
 
 	"github.com/242617/torture/config"
+	"github.com/242617/torture/sine"
 	"github.com/242617/torture/utils"
 )
 
-// var ss sine.StereoSine
-
 var start = time.Now()
+
+var ss *sine.StereoSine
 
 type request struct {
 	Enabled *bool `json:"enabled,omitempty"`
 	Volume  *int  `json:"volume,omitempty"`
 }
 
+const (
+	DefaultDeltaMin, DefaultDeltaMax         int = 7, 10
+	DefaultFrequencyMin, DefaultFrequencyMax int = 30, 50
+	DefaultDelay                             int = 250
+)
+
 func Init() (err error) {
 
-	/*if ss, err = sine.NewStereoSine(DefaultFrequencyMin, DefaultFrequencyMin+DefaultDeltaMin, 44100); err != nil {
-		log.Fatal(err)
-	}*/
+	if ss, err = sine.NewStereoSine(DefaultFrequencyMin, DefaultFrequencyMin+DefaultDeltaMin, 44100); err != nil {
+		return
+	}
 
 	state = NewState()
 
@@ -76,36 +83,23 @@ func addCORS(w *http.ResponseWriter) {
 
 func process(changes request) (err error) {
 
-	log.Println("process")
-	log.Println(state)
-
 	if changes.Enabled != nil {
+		log.Println("*changes.Enabled", *changes.Enabled)
 		if !state.Enabled && *changes.Enabled {
-			log.Println("start")
+			ss.Play()
 			state.Enabled = true
 		}
 		if state.Enabled && !*changes.Enabled {
-			log.Println("stop")
+			ss.Stop()
 			state.Enabled = false
 		}
 	}
 
 	if changes.Volume != nil {
+		log.Println("*changes.Volume", *changes.Volume)
 		state.Volume = utils.NormalizeVolume(*changes.Volume)
+		ss.SetVolume(state.Volume)
 	}
 
-	log.Println(state)
-
-	/*stopCh := make(chan struct{})
-	defer close(stopCh)
-
-	ss.Play()
-	ss.Left.SetFrequency(80)
-	ss.Right.SetFrequency(90)
-	ss.SetVolume(100)
-
-	time.Sleep(10 * time.Second)*/
-
 	return
-
 }

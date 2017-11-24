@@ -1,9 +1,7 @@
 const LocalStorageKey = "242617/torture:address"
 
 let getAddress = () => document.getElementById("addressValue").value;
-let setAddress = address => {
-	document.getElementById("addressValue").value = address;
-};
+let setAddress = address => document.getElementById("addressValue").value = address;
 
 $(() => {
 	setAddress(window.localStorage.getItem(LocalStorageKey))

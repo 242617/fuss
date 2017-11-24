@@ -39,9 +39,14 @@ func Init() (err error) {
 		case http.MethodOptions:
 			w.Header().Add("Access-Control-Allow-Origin", "http://chill-out.ru:8080")
 			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
+			w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type")
 		case http.MethodGet:
 			json.NewEncoder(w).Encode(&state)
+			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
+			w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type")
 		case http.MethodPut:
+			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
+			w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type")
 			var changes request
 			defer r.Body.Close()
 			if err = json.NewDecoder(r.Body).Decode(&changes); err != nil {

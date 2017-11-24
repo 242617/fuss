@@ -36,6 +36,8 @@ func Init() (err error) {
 	})
 	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
+		case http.MethodOptions:
+			w.Header().Add("Access-Control-Allow-Origin", "http://chill-out.ru:8080")
 		case http.MethodGet:
 			json.NewEncoder(w).Encode(&state)
 		case http.MethodPut:

@@ -70,7 +70,7 @@ func Init() (err error) {
 
 func addCORS(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", config.Config.Origin)
-	(*w).Header().Set("Access-Control-Allow-Methods", "Get, Put, Options")
+	(*w).Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
 }
 

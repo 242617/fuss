@@ -6,15 +6,24 @@ let setAddress = address => document.getElementById("addressValue").value = addr
 $(() => {
 	setAddress(window.localStorage.getItem(LocalStorageKey))
 
-	document.getElementById("addressBtn").addEventListener("click", () => {
-		window.localStorage.setItem(LocalStorageKey, document.getElementById("addressValue").value);
-	});
-
-	let enabled = document.getElementById("enabled");
-	enabled.addEventListener("change", event => {
+	document.getElementById("enabled").addEventListener("change", event => {
 		fetch(getAddress(), { method: "PUT", body: JSON.stringify({ enabled: event.target.checked }) })
 		.then(console.log)
 		.catch(console.error);
+	});
+
+	document.getElementById("frequencyBtn").addEventListener("click", event => {
+		console.log("here");
+		fetch(getAddress(), { method: "PUT", body: JSON.stringify({
+			left: parseInt(document.getElementById("leftValue").value) || 0,
+			right: parseInt(document.getElementById("rightValue").value) || 0
+		}) })
+		.then(console.log)
+		.catch(console.error);
+	});
+
+	document.getElementById("addressBtn").addEventListener("click", () => {
+		window.localStorage.setItem(LocalStorageKey, document.getElementById("addressValue").value);
 	});
 
 	let slider  = $("#slider");

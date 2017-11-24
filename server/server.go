@@ -5,6 +5,8 @@ var state *State
 type State struct {
 	Enabled bool `json:"enabled"`
 	Volume  int  `json:"volume"`
+	Left    int  `json:"left"`
+	Right   int  `json:"right"`
 }
 
 func NewState() *State {

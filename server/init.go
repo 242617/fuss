@@ -17,8 +17,10 @@ var start = time.Now()
 var ss *sine.StereoSine
 
 type request struct {
-	Enabled *bool `json:"enabled,omitempty"`
-	Volume  *int  `json:"volume,omitempty"`
+	Enabled *bool `json:"enabled"`
+	Volume  *int  `json:"volume"`
+	Left    *int  `json:"left"`
+	Right   *int  `json:"right"`
 }
 
 const (
@@ -99,6 +101,18 @@ func process(changes request) (err error) {
 		log.Println("*changes.Volume", *changes.Volume)
 		state.Volume = utils.NormalizeVolume(*changes.Volume)
 		ss.SetVolume(state.Volume)
+	}
+
+	if changes.Left != nil {
+		log.Println("*changes.Left", *changes.Left)
+		state.Left = utils.NormalizeFrequency(*changes.Left)
+		ss.Left.SetFrequency(*changes.Left)
+	}
+
+	if changes.Right != nil {
+		log.Println("*changes.Right", *changes.Right)
+		state.Right = utils.NormalizeFrequency(*changes.Right)
+		ss.Right.SetFrequency(*changes.Right)
 	}
 
 	return

@@ -76,7 +76,8 @@ func addCORS(w *http.ResponseWriter) {
 
 func process(changes request) (err error) {
 
-	log.Println(state, changes)
+	log.Println("process")
+	log.Println(state)
 
 	if changes.Enabled != nil {
 		if !state.Enabled && *changes.Enabled {
@@ -92,6 +93,8 @@ func process(changes request) (err error) {
 	if changes.Volume != nil {
 		state.Volume = utils.NormalizeVolume(*changes.Volume)
 	}
+
+	log.Println(state)
 
 	/*stopCh := make(chan struct{})
 	defer close(stopCh)

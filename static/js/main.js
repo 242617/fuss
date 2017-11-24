@@ -1,16 +1,20 @@
 const LocalStorageKey = "242617/torture:address"
 
-let address = () => document.getElementById("addressValue").value;
+let getAddress = () => document.getElementById("addressValue").value;
+let setAddress = address => {
+	document.getElementById("addressValue").value = address;
+};
 
 $(() => {
+	setAddress(window.localStorage.getItem(LocalStorageKey))
 
 	document.getElementById("addressBtn").addEventListener("click", () => {
-		window.localStorage.setItem(LocalStorageKey, document.getElementById("addressValue").value)
+		window.localStorage.setItem(LocalStorageKey, document.getElementById("addressValue").value);
 	});
 
 	let enabled = document.getElementById("enabled");
 	enabled.addEventListener("change", event => {
-		fetch(address(), { method: "PUT", body: JSON.stringify({ enabled: event.target.checked }) })
+		fetch(getAddress(), { method: "PUT", body: JSON.stringify({ enabled: event.target.checked }) })
 		.then(console.log)
 		.catch(console.error);
 	});
@@ -21,8 +25,6 @@ $(() => {
 		range: "min",
 		min: 0,
 		value: 100,
-		step: 10,
-
 		slide: (event, ui) => {
 			let value  = slider.slider("value"),
 
@@ -37,7 +39,7 @@ $(() => {
 				volume.css("background-position", "0 -75px");
 			};
 
-			fetch(address(), { method: "PUT", body: JSON.stringify({ volume: value }) })
+			fetch(getAddress(), { method: "PUT", body: JSON.stringify({ volume: value }) })
 			.then(console.log)
 			.catch(console.error);
 		},
@@ -45,7 +47,7 @@ $(() => {
 		// stop: (event, ui) => {},
 	});
 
-	fetch(address(), { method: "GET" })
+	fetch(getAddress(), { method: "GET" })
 	.then(response => response.json())
 	.then(status => {
 		enabled.checked = status.enabled;
@@ -53,7 +55,5 @@ $(() => {
 		new Switchery(document.getElementById("enabled"))
 	})
 	.catch(console.error);
-
-	document.getElementById("addressValue").value = window.localStorage.getItem(LocalStorageKey)
 
 });

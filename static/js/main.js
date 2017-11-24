@@ -4,7 +4,10 @@ let getAddress = () => document.getElementById("addressValue").value;
 let setAddress = address => document.getElementById("addressValue").value = address;
 
 $(() => {
-	setAddress(window.localStorage.getItem(LocalStorageKey))
+	setAddress(window.localStorage.getItem(LocalStorageKey));
+
+	let left = document.getElementById("leftValue");
+	let right = document.getElementById("rightValue");
 
 	document.getElementById("enabled").addEventListener("change", event => {
 		fetch(getAddress(), { method: "PUT", body: JSON.stringify({ enabled: event.target.checked }) })
@@ -15,8 +18,8 @@ $(() => {
 	document.getElementById("frequencyBtn").addEventListener("click", event => {
 		console.log("here");
 		fetch(getAddress(), { method: "PUT", body: JSON.stringify({
-			left: parseInt(document.getElementById("leftValue").value) || 0,
-			right: parseInt(document.getElementById("rightValue").value) || 0
+			left: parseInt(left.value) || 0,
+			right: parseInt(right.value) || 0
 		}) })
 		.then(console.log)
 		.catch(console.error);
@@ -59,6 +62,8 @@ $(() => {
 	.then(status => {
 		enabled.checked = status.enabled;
 		slider.slider("value", status.volume);
+		left.value = status.left;
+		right.value = status.right;
 		new Switchery(document.getElementById("enabled"))
 	})
 	.catch(console.error);

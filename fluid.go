@@ -1,12 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"net/http"
-	"time"
-)
-
-func fluidHandler(w http.ResponseWriter, r *http.Request) {
+/*func fluidHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method, "/fluid")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusBadRequest)
@@ -115,4 +109,4 @@ func incr(n, m int, inc bool) int {
 		n -= m
 	}
 	return n
-}
+}*/

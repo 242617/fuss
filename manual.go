@@ -1,11 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"net/http"
-)
-
-func manualHandler(w http.ResponseWriter, r *http.Request) {
+/*func manualHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method, "/manual")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusBadRequest)
@@ -29,4 +24,4 @@ func manualHandler(w http.ResponseWriter, r *http.Request) {
 		ss.Right.SetFrequency(*settings.Right)
 	}
 	ss.Play()
-}
+}*/

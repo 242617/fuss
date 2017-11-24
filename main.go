@@ -1,19 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"time"
-
-	"github.com/gordonklaus/portaudio"
 
 	"github.com/242617/torture/config"
 	"github.com/242617/torture/server"
-	"github.com/242617/torture/sine"
 )
 
 const (
@@ -22,12 +14,13 @@ const (
 	DefaultDelay                             int = 250
 )
 
-var (
-	err          error
+var err error
+
+/*var (
 	fluidEnabled bool
 	ss           *sine.StereoSine
 	stopCh       chan struct{}
-)
+)*/
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -39,30 +32,41 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// portaudio.Initialize()
+	// defer portaudio.Terminate()
+
+	log.Println("starting")
 	log.Fatal(server.Init())
 
 	return
 
-	portaudio.Initialize()
-	defer portaudio.Terminate()
-
-	stopCh := make(chan struct{})
-	defer close(stopCh)
-
-	if ss, err = sine.NewStereoSine(DefaultFrequencyMin, DefaultFrequencyMin+DefaultDeltaMin, 44100); err != nil {
+	/*if err = player.Init(); err != nil {
 		log.Fatal(err)
 	}
-
-	ss.Play()
-	ss.Left.SetFrequency(80)
-	ss.Right.SetFrequency(90)
-	ss.SetVolume(100)
-
+	player.Play("sample.mp3")
+	time.Sleep(10 * Time.Seconds)
+	player.Pause()
+	time.Sleep(2 * Time.Seconds)
+	player.Resume()
+	time.Sleep(10 * Time.Seconds)
+	player.SetVolume(100)
+	time.Sleep(time.Second)
+	player.SetVolume(80)
+	time.Sleep(time.Second)
+	player.SetVolume(60)
+	time.Sleep(time.Second)
+	player.SetVolume(40)
+	time.Sleep(time.Second)
+	player.SetVolume(20)
+	time.Sleep(time.Second)
+	player.SetVolume(0)
+	time.Sleep(time.Second)
+	player.Stop()
 	time.Sleep(10 * time.Second)
+	log.Println("done")
+	return*/
 
-	return
-
-	http.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
+	/*http.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.Method, "/start")
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusBadRequest)
@@ -162,10 +166,10 @@ func main() {
 		}()
 	})
 	http.Handle("/", http.FileServer(http.Dir(config.Config.Static)))
-	log.Fatal(http.ListenAndServe(config.Config.ServerAddress, nil))
+	log.Fatal(http.ListenAndServe(config.Config.ServerAddress, nil))*/
 }
 
-func parseBody(w http.ResponseWriter, r *http.Request, body interface{}) {
+/*func parseBody(w http.ResponseWriter, r *http.Request, body interface{}) {
 	defer r.Body.Close()
 	if barr, err := ioutil.ReadAll(r.Body); err != nil {
 		log.Println(err)
@@ -176,4 +180,4 @@ func parseBody(w http.ResponseWriter, r *http.Request, body interface{}) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
-}
+}*/

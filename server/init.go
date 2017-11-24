@@ -28,6 +28,8 @@ func Init() (err error) {
 
 	state = NewState()
 
+	static := http.FileServer(http.Dir(config.Config.Static))
+
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		resp := struct {
 			Uptime string `json:"uptime"`
@@ -35,18 +37,12 @@ func Init() (err error) {
 		json.NewEncoder(w).Encode(&resp)
 	})
 	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+		addCORS(&w)
 		switch r.Method {
 		case http.MethodOptions:
-			w.Header().Add("Access-Control-Allow-Origin", "http://chill-out.ru:8080")
-			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
-			w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type")
 		case http.MethodGet:
 			json.NewEncoder(w).Encode(&state)
-			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
-			w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type")
 		case http.MethodPut:
-			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
-			w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type")
 			var changes request
 			defer r.Body.Close()
 			if err = json.NewDecoder(r.Body).Decode(&changes); err != nil {
@@ -64,9 +60,18 @@ func Init() (err error) {
 			w.WriteHeader(http.StatusNotImplemented)
 		}
 	})
-	http.Handle("/", http.FileServer(http.Dir(config.Config.Static)))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		addCORS(&w)
+		static.ServeHTTP(w, r)
+	})
 	log.Println("server", fmt.Sprintf(`starting at "%s"`, config.Config.ServerAddress))
 	return http.ListenAndServe(config.Config.ServerAddress, nil)
+}
+
+func addCORS(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", config.Config.Origin)
+	(*w).Header().Set("Access-Control-Allow-Methods", "Get, Put, Options")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
 }
 
 func process(changes request) (err error) {

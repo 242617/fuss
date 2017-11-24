@@ -1,6 +1,7 @@
 package config
 
 var Config struct {
-	Static        string `yaml:"static"`
+	Origin        string `yaml:"origin"`
 	ServerAddress string `yaml:"server_address"`
+	Static        string `yaml:"static"`
 }

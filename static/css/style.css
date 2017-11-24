@@ -2,9 +2,9 @@ body {
 	background: url('../images/bg.jpg') repeat top left;
 }
 
-body, html {
+/*body, html {
 	position: fixed;
-}
+}*/
 
 section {
 	width: 150px;

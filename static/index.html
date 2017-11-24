@@ -13,29 +13,40 @@
 	<script type="text/javascript" src="js/main.js"></script>
 </head>
 <body>
-	<div class="container">
-		<h1>torture</h1>
+	<br/>
 
-		<div class="well well-sm">
-			<div class="row">
-				<div class="col-xs-3">
-					<input type="checkbox" class="js-switch" id="enabled" />
-				</div>
-				<div class="col-xs-9">
-					<section>
-						<div id="slider"></div>
-						<span class="volume"></span>
-					</section>
+	<div class="container-fluid">
+		
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-xs-2">
+						<input type="checkbox" class="js-switch" id="enabled" />
+					</div>
+					<div class="col-xs-10">
+						<section>
+							<div id="slider"></div>
+							<span class="volume"></span>
+						</section>
+					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="well well-sm">
-			<div class="form-group">
-				<label for="addressValue">Address:</label>
-				<input type="text" class="form-control" id="addressValue" />
-			<button type="button" class="btn btn-primary" id="addressBtn">Save</button>
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-xs-9">
+						<input type="text" class="form-control" id="addressValue" />
+					</div>
+					<div class="col-xs-3">
+						<button type="button" class="btn btn-primary" id="addressBtn">Save</button>
+					</div>
+				</div>
+			</div>
 		</div>
+
 	</div>
+
 </body>
 </html>

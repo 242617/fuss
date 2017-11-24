@@ -48,12 +48,8 @@ $(() => {
 	fetch(address(), { method: "GET" })
 	.then(response => response.json())
 	.then(status => {
-		console.log("status.enabled", status.enabled)
-		enabled.checked = status.enabled ? "on" : "off";
-
-		console.log("status.volume", status.volume)
+		enabled.checked = status.enabled;
 		slider.slider("value", status.volume);
-
 		new Switchery(document.getElementById("enabled"))
 	})
 	.catch(console.error);

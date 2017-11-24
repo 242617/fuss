@@ -2,10 +2,13 @@ body {
 	background: url('../images/bg.jpg') repeat top left;
 }
 
+body, html {
+	position: fixed;
+}
+
 section {
-	width: 250px;
+	width: 175px;
 	height: 30px;
-	/*margin: 100px auto 0;*/
 	position: relative;
 	padding: 10px;
 }
@@ -15,7 +18,7 @@ section {
 	border-style: solid;
 	border-color: #333 #333 #777 #333;
 	border-radius: 25px;
-	width: 200px;
+	width: 150px;
 	position: absolute;
 	height: 13px;
 	background-color: #8e8d8d;

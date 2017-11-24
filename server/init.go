@@ -38,6 +38,7 @@ func Init() (err error) {
 		switch r.Method {
 		case http.MethodOptions:
 			w.Header().Add("Access-Control-Allow-Origin", "http://chill-out.ru:8080")
+			w.Header().Add("Access-Control-Allow-Methods", "Get, Put, Options")
 		case http.MethodGet:
 			json.NewEncoder(w).Encode(&state)
 		case http.MethodPut:
